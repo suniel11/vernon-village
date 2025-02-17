@@ -1,34 +1,60 @@
-import { useState } from "react";
+import React, { useState } from 'react';
 
-const Submit = () => {
-  const [form, setForm] = useState({ title: "", description: "", author: "" });
+function Submit() {
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const userId = localStorage.getItem('userId'); // Retrieve user ID from local storage
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    await fetch("http://localhost:5000/api/announcements", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
-    alert("Announcement submitted for approval!");
-    setForm({ title: "", description: "", author: "" });
+    if (!title || !description) {
+      console.error('Title and description are required');
+      return;
+    }
+    fetch('http://localhost:5000/api/announcements', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        title, 
+        description, 
+        status: 'pending', 
+        user: userId // Include user ID
+      }),
+    })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Success:', data);
+        setTitle('');
+        setDescription('');
+      })
+      .catch(error => console.error('Error submitting announcement:', error));
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold">Submit an Announcement</h1>
-      <form className="mt-4" onSubmit={handleSubmit}>
-        <input type="text" name="title" placeholder="Title" value={form.title} onChange={handleChange} className="w-full p-2 border rounded my-2" />
-        <textarea name="description" placeholder="Description" value={form.description} onChange={handleChange} className="w-full p-2 border rounded my-2" />
-        <input type="text" name="author" placeholder="Your Name" value={form.author} onChange={handleChange} className="w-full p-2 border rounded my-2" />
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">Submit</button>
+    <div>
+      <h1>Submit Announcement</h1>
+      <form onSubmit={handleSubmit}>
+        <div>
+          <label>Title:</label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+        </div>
+        <div>
+          <label>Description:</label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+        </div>
+        <button type="submit">Submit</button>
       </form>
     </div>
   );
-};
+}
 
 export default Submit;

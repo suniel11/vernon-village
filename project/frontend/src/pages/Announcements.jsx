@@ -1,12 +1,13 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 
-const Announcements = () => {
+function Announcements() {
   const [announcements, setAnnouncements] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/announcements") // Backend URL
-      .then((res) => res.json())
-      .then((data) => setAnnouncements(data));
+    fetch('http://localhost:5000/api/announcements')
+      .then(response => response.json())
+      .then(data => setAnnouncements(data))
+      .catch(error => console.error('Error fetching announcements:', error));
   }, []);
 
   return (
@@ -17,7 +18,9 @@ const Announcements = () => {
           <div key={announcement._id} className="p-4 border my-4 rounded shadow">
             <h2 className="text-xl font-semibold">{announcement.title}</h2>
             <p className="text-gray-600">{announcement.description}</p>
-            <p className="text-sm text-gray-500">By {announcement.author}</p>
+            <p className="text-sm text-gray-500">
+              By {announcement.user ? announcement.user.name : 'Unknown'}
+            </p>
           </div>
         ))
       ) : (
@@ -25,6 +28,6 @@ const Announcements = () => {
       )}
     </div>
   );
-};
+}
 
 export default Announcements;
