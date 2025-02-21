@@ -15,21 +15,18 @@ exports.createAnnouncement = async (req, res) => {
 // Get all announcements
 exports.getAnnouncements = async (req, res) => {
   try {
-    const announcements = await Announcement.find().populate("user" , "name");
+    const announcements = await Announcement.find().populate("user", "name");
     res.status(200).json(announcements);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// Get a single announcement by ID
-exports.getAnnouncementById = async (req, res) => {
+// Get announcements by user ID
+exports.getAnnouncementsByUser = async (req, res) => {
   try {
-    const announcement = await Announcement.findById(req.params.id).populate("user");
-    if (!announcement) {
-      return res.status(404).json({ message: "Announcement not found" });
-    }
-    res.status(200).json(announcement);
+    const announcements = await Announcement.find({ user: req.params.userId }).populate("user", "name");
+    res.status(200).json(announcements);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -38,10 +35,10 @@ exports.getAnnouncementById = async (req, res) => {
 // Update an announcement by ID
 exports.updateAnnouncement = async (req, res) => {
   try {
-    const { title, description, status } = req.body;
+    const { title, description } = req.body;
     const announcement = await Announcement.findByIdAndUpdate(
       req.params.id,
-      { title, description, status },
+      { title, description },
       { new: true }
     );
     if (!announcement) {

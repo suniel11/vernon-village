@@ -4,6 +4,7 @@ const cors = require("cors");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const announcementRoutes = require("./routes/announcementRoutes");
+const path = require('path');
 
 dotenv.config();
 const app = express();
@@ -20,6 +21,10 @@ console.log("connectDB:", connectDB);
 connectDB();
 
 // Routes
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+
 app.use("/api/auth", authRoutes);
 app.use("/api/announcements", announcementRoutes);
 

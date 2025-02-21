@@ -4,15 +4,21 @@ function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [profilePic, setProfilePic] = useState(null);
 
   const handleRegister = (e) => {
     e.preventDefault();
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('email', email);
+    formData.append('password', password);
+    if (profilePic) {
+      formData.append('profilePic', profilePic);
+    }
+
     fetch('http://localhost:5000/api/auth/register', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ name, email, password }),
+      body: formData,
     })
       .then(response => response.json())
       .then(data => {
@@ -48,6 +54,13 @@ function Register() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
+        <div>
+          <label>Profile Picture:</label>
+          <input
+            type="file"
+            onChange={(e) => setProfilePic(e.target.files[0])}
           />
         </div>
         <button type="submit">Register</button>

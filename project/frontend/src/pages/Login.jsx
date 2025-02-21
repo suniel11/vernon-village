@@ -1,27 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import AuthContext from '../context/AuthContext';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
+  const { login } = useContext(AuthContext);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    fetch('http://localhost:5000/api/auth/login', {
+    const response = await fetch('http://localhost:5000/api/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ email, password }),
-    })
-      .then(response => response.json())
-      .then(data => {
-        console.log('Success:', data);
-        localStorage.setItem('userId', data.userId); // Store user ID in local storage
-        navigate('/'); // Navigate to the homepage
-      })
-      .catch(error => console.error('Error logging in:', error));
+    });
+    const data = await response.json();
+    if (data.token) {
+      await login({ userId: data.userId, token: data.token });
+      navigate('/');
+    } else {
+      console.error('Login failed:', data.message);
+    }
   };
 
   return (

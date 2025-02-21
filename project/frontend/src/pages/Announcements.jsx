@@ -6,7 +6,10 @@ function Announcements() {
   useEffect(() => {
     fetch('http://localhost:5000/api/announcements')
       .then(response => response.json())
-      .then(data => setAnnouncements(data))
+      .then(data => {
+        console.log('Fetched announcements:', data); // Print the data to the console
+        setAnnouncements(data);
+      })
       .catch(error => console.error('Error fetching announcements:', error));
   }, []);
 

@@ -5,19 +5,29 @@ import Announcements from './pages/Announcements';
 import Submit from './pages/Submit';
 import Register from './pages/Register';
 import Login from './pages/Login';
+import Users from './pages/Users';
+import Profile from './pages/Profile';
+import EditAnnouncement from './pages/EditAnnouncement';
+import { AuthProvider } from './context/AuthContext';
+import PrivateRoute from './components/PrivateRoute';
 
 function App() {
   return (
-    <Router>
-      <Navbar />
-      <Routes>
-        <Route path="/" element={<Announcements />} />
-        <Route path="/announcements" element={<Announcements />} />
-        <Route path="/submit" element={<Submit />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/login" element={<Login />} />
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Navbar />
+        <Routes>
+          <Route path="/" element={<Announcements />} />
+          <Route path="/announcements" element={<Announcements />} />
+          <Route path="/submit" element={<Submit />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/users" element={<Users />} />
+          <Route path="/profile/:userId" element={<PrivateRoute><Profile /></PrivateRoute>} />
+          <Route path="/edit-announcement/:announcementId" element={<PrivateRoute><EditAnnouncement /></PrivateRoute>} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 
