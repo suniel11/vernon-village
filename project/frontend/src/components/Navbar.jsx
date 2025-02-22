@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Menu, X } from "lucide-react"; // Install lucide-react for icons
 import AuthContext from "../context/AuthContext";
 
+
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const { user, logout } = useContext(AuthContext);
@@ -13,7 +14,7 @@ function Navbar() {
     <nav className="bg-blue-600 text-white p-4">
       <div className="container mx-auto flex justify-between items-center">
         {/* Left - Logo */}
-        <Link to="/" className="text-2xl font-bold">
+        <Link to="/home" className="text-2xl font-bold">
           Vernon Village
         </Link>
 

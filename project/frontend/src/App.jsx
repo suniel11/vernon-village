@@ -7,6 +7,7 @@ import Register from './pages/Register';
 import Login from './pages/Login';
 import Users from './pages/Users';
 import Profile from './pages/Profile';
+import Home from './pages/Home';
 import EditAnnouncement from './pages/EditAnnouncement';
 import { AuthProvider } from './context/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
@@ -17,6 +18,7 @@ function App() {
       <Router>
         <Navbar />
         <Routes>
+          <Route path="/home" element={<Home />} />
           <Route path="/" element={<Announcements />} />
           <Route path="/announcements" element={<Announcements />} />
           <Route path="/submit" element={<Submit />} />
