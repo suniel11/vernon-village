@@ -2,23 +2,31 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Submit = () => {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const [formData, setFormData] = useState({ 
+    title: '', 
+    description: '' 
+  });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
+  const [showPreview, setShowPreview] = useState(false);
   const userId = localStorage.getItem('userId');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage(null);
 
-    if (!title || !description) {
-      setMessage({ type: 'error', text: 'Title and description are required' });
+    if (!formData.title.trim() || !formData.description.trim()) {
+      setMessage({ type: 'error', text: 'Both fields are required' });
+      return;
+    }
+
+    if (formData.title.length > 100) {
+      setMessage({ type: 'error', text: 'Title must be under 100 characters' });
       return;
     }
 
     if (!userId) {
-      setMessage({ type: 'error', text: 'User ID is missing. Please log in.' });
+      setMessage({ type: 'error', text: 'Please login to submit announcements' });
       return;
     }
 
@@ -27,22 +35,25 @@ const Submit = () => {
     try {
       const response = await fetch('http://localhost:5000/api/announcements', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          title, 
-          description, 
+          ...formData,
           status: 'pending', 
           user: userId 
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to submit announcement');
+      if (!response.ok) throw new Error('Submission failed. Please try again.');
       
-      setMessage({ type: 'success', text: 'Announcement submitted successfully!' });
-      setTitle('');
-      setDescription('');
+      setMessage({ 
+        type: 'success', 
+        text: 'Announcement submitted for review!',
+        reset: () => {
+          setFormData({ title: '', description: '' });
+          setShowPreview(false);
+        }
+      });
+
     } catch (error) {
       setMessage({ type: 'error', text: error.message });
     } finally {
@@ -51,14 +62,17 @@ const Submit = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 to-indigo-900 flex items-center justify-center p-4">
-      {/* Animated Background Elements */}
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 to-indigo-900 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Floating Background Elements */}
       <motion.div 
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
-        className="absolute inset-0 opacity-10"
+        className="absolute inset-0 opacity-10 pointer-events-none"
         style={{
-          backgroundImage: `radial-gradient(circle, #fff 10%, transparent 20%)`,
+          backgroundImage: `
+            radial-gradient(circle at 20% 20%, rgba(255,255,255,0.1) 1%, transparent 15%),
+            radial-gradient(circle at 80% 80%, rgba(255,255,255,0.1) 1%, transparent 15%)
+          `,
           backgroundSize: '30px 30px'
         }}
       />
@@ -68,119 +82,157 @@ const Submit = () => {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ type: 'spring', stiffness: 100 }}
           className="text-center mb-8"
         >
-          <h1 className="text-4xl font-bold text-white mb-3">
-            Share Your Announcement
+          <h1 className="text-4xl font-bold text-white mb-3 bg-clip-text text-transparent bg-gradient-to-r from-purple-300 to-pink-300">
+            Share with the Community
           </h1>
-          <p className="text-purple-200">
-            Connect with the community through your important updates
+          <p className="text-purple-200 font-light">
+            Craft your announcement and connect with neighbors
           </p>
         </motion.div>
 
-        {/* Message Display */}
+        {/* Message Toast */}
         <AnimatePresence>
           {message && (
             <motion.div
-              initial={{ opacity: 0, y: -10 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className={`p-4 mb-6 rounded-lg flex items-center ${
+              exit={{ opacity: 0, y: -20 }}
+              className={`fixed bottom-6 right-6 p-4 rounded-lg flex items-center shadow-xl ${
                 message.type === 'error' 
                 ? 'bg-red-100 text-red-800' 
                 : 'bg-emerald-100 text-emerald-800'
               }`}
+              onAnimationComplete={() => message.type === 'success' && message.reset?.()}
             >
-              <svg
-                className={`w-5 h-5 mr-3 ${
-                  message.type === 'error' ? 'text-red-500' : 'text-emerald-500'
-                }`}
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
+              <svg className={`w-6 h-6 mr-3 ${message.type === 'error' ? 'text-red-500' : 'text-emerald-500'}`}
+                fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 {message.type === 'error' ? (
-                  <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"/>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                 ) : (
-                  <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-8 8 8 8 0 01-8-8zm12.707-1.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 )}
               </svg>
-              {message.text}
+              <div>
+                <p className="font-medium">{message.text}</p>
+                {message.type === 'success' && (
+                  <p className="text-sm opacity-80">Redirecting to home...</p>
+                )}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Form Section */}
-        <motion.form 
-          onSubmit={handleSubmit}
+        {/* Form Container */}
+        <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white rounded-xl shadow-2xl p-8"
+          className="bg-white/90 backdrop-blur-sm rounded-xl shadow-2xl overflow-hidden"
         >
-          <div className="space-y-6">
-            {/* Title Field */}
-            <div>
-              <label className="block text-gray-700 font-medium mb-2">
-                Announcement Title
-              </label>
-              <input
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter a clear title"
-              />
-            </div>
+          <div className="p-8">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Announcement Title
+                  <span className="text-red-500 ml-1">*</span>
+                  <span className="float-right text-xs text-gray-400">
+                    {formData.title.length}/100
+                  </span>
+                </label>
+                <input
+                  value={formData.title}
+                  onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                  placeholder="Community BBQ this Saturday..."
+                  maxLength={100}
+                />
+              </div>
 
-            {/* Description Field */}
-            <div>
-              <label className="block text-gray-700 font-medium mb-2">
-                Detailed Description
-              </label>
-              <textarea
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all h-32"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Describe your announcement in detail"
-              />
-            </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Detailed Description
+                  <span className="text-red-500 ml-1">*</span>
+                  <span className="float-right text-xs text-gray-400">
+                    {formData.description.length}/500
+                  </span>
+                </label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all h-48"
+                  placeholder="Describe event details, location, time..."
+                  maxLength={500}
+                />
+              </div>
 
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-300 flex items-center justify-center"
-            >
-              {loading ? (
-                <>
-                  <svg
-                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Submitting...
-                </>
-              ) : (
-                'Publish Announcement'
-              )}
-            </button>
+              <div className="flex gap-4 items-center">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-medium transition-all flex-1 relative"
+                >
+                  {loading ? (
+                    <span className="opacity-0">Submitting...</span>
+                  ) : (
+                    'Publish Announcement'
+                  )}
+                  {loading && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                        <path className="opacity-75" fill="currentColor" 
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                      </svg>
+                    </div>
+                  )}
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => setShowPreview(!showPreview)}
+                  className="px-4 py-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                >
+                  {showPreview ? 'Hide Preview' : 'Show Preview'}
+                </button>
+              </div>
+            </form>
           </div>
-        </motion.form>
+
+          {/* Preview Section */}
+          <AnimatePresence>
+            {showPreview && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="bg-purple-50 border-t border-purple-100 p-6"
+              >
+                <h3 className="text-lg font-semibold text-purple-800 mb-4">Preview</h3>
+                <div className="space-y-4">
+                  <div className="p-4 bg-white rounded-lg shadow-sm">
+                    <h4 className="text-xl font-medium mb-2">{formData.title || 'Your Title'}</h4>
+                    <p className="text-gray-600 whitespace-pre-line">
+                      {formData.description || 'Your description will appear here...'}
+                    </p>
+                    <div className="mt-4 flex items-center text-sm text-gray-400">
+                      <span className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center mr-2">
+                        👤
+                      </span>
+                      <span>Posted by You</span>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-500 text-center">
+                    This is how your announcement will appear to others
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
       </div>
     </div>
   );

@@ -64,6 +64,26 @@ function Navbar() {
           <li><Link className="block hover:bg-blue-800 p-2" to="/register">Register</Link></li>
           <li><Link className="block hover:bg-blue-800 p-2" to="/login">Login</Link></li>
          
+          {user && (
+            <>
+              <li>
+                <Link to={`/profile/${user.userId}`}>
+                  {user.profilePic ? (
+                    <img
+                      src={`http://localhost:5000/${user.profilePic}`}
+                      alt="Profile"
+                      className="w-8 h-8 rounded-full"
+                    />
+                  ) : (
+                    <span className="hover:text-gray-300 transition">Profile</span>
+                  )}
+                </Link>
+              </li>
+              <li><button className="hover:text-gray-300 transition" onClick={logout}>Logout</button></li>
+            </>
+          )}
+
+
         </ul>
       )}
     </nav>
